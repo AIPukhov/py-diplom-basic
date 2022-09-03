@@ -59,6 +59,7 @@ def create_folder():  # Создаем папку avatars куда будут з
 # данные о незагруженных фото сохраняем в отдельный список словарей.
 def download_photo(count_photos=5):
     import requests
+    from tqdm import tqdm
     error_uploading_photo_list = []
     data = max_size_photo()
     count = 0
@@ -68,7 +69,8 @@ def download_photo(count_photos=5):
         'Authorization': f'OAuth {token_ya_disk()}'
     }
     url = 'https://cloud-api.yandex.net/v1/disk/resources'
-    for item in data:
+    print('Загрузка фотографий:')
+    for item in tqdm(data[:count_photos]):
         if count < count_photos:
             loadfile = requests.get(item['url']).content
             name_file = str(item['likes'])
@@ -90,10 +92,7 @@ def download_photo(count_photos=5):
                                 'size': item['size']
                             }
                         )
-                        # list_files.append(f'{name_file}.jpg')
-                        print('Фотография успешно загружена!')
                     except KeyError:
-                        print('Фотография c таким именем уже существует!')
                         if res['error'] == 'DiskResourceAlreadyExistsError':
                             error_uploading_photo_list.append(
                                 {
@@ -109,6 +108,7 @@ def download_photo(count_photos=5):
 def error_uploading_photo(uploading_photo_list):
     if uploading_photo_list:
         import requests
+        from tqdm import tqdm
         data = uploading_photo_list
         headers = {
             'Content-Type': 'application/json',
@@ -116,7 +116,8 @@ def error_uploading_photo(uploading_photo_list):
             'Authorization': f'OAuth {token_ya_disk()}'
         }
         url = 'https://cloud-api.yandex.net/v1/disk/resources'
-        for item in data:
+        print('Повторная загрузка с измененным именем файла:')
+        for item in tqdm(data):
             loadfile = requests.get(item['loadfile']).content
             name_file = item['name_file']
             savefile = f'avatars/{name_file}.jpg'
@@ -135,8 +136,6 @@ def error_uploading_photo(uploading_photo_list):
                             'size': item['size']
                         }
                     )
-                    # list_files.append(f'{name_file}.jpg')
-                    print('Фотография с измененным именем успешно загружена!')
         print('Все фотографии успешно загружены')
     else:
         print('Все фотографии успешно загружены!')
